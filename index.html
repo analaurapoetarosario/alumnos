@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Registro de Alumnos</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:system-ui,-apple-system,sans-serif;background:#f5f5f3;color:#1a1a1a;min-height:100vh}
+  .topbar{background:#fff;border-bottom:1px solid #e5e5e0;padding:0 1.5rem;height:52px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:10}
+  .topbar h1{font-size:16px;font-weight:500}
+  .dot{width:8px;height:8px;border-radius:50%;background:#ef4444}
+  .dot.on{background:#22c55e}
+  .conn-lbl{font-size:12px;color:#888}
+  .main{max-width:780px;margin:0 auto;padding:1.5rem}
+  .tabs{display:flex;gap:4px;margin-bottom:1.5rem;background:#fff;border:1px solid #e5e5e0;border-radius:10px;padding:4px}
+  .tab{flex:1;font-size:13px;padding:7px;border:none;background:none;cursor:pointer;color:#888;border-radius:7px;transition:all 0.15s}
+  .tab.active{background:#1a1a1a;color:#fff;font-weight:500}
+  .card{background:#fff;border:1px solid #e5e5e0;border-radius:12px;padding:1.25rem;margin-bottom:1rem}
+  .field{margin-bottom:1rem}
+  .field label{display:block;font-size:12px;color:#888;margin-bottom:4px;font-weight:500;text-transform:uppercase;letter-spacing:0.04em}
+  .field input,.field select,.field textarea{width:100%;font-size:14px;padding:8px 12px;border:1px solid #e5e5e0;border-radius:8px;background:#fff;color:#1a1a1a;outline:none}
+  .field input:focus,.field select:focus,.field textarea:focus{border-color:#1a1a1a}
+  .field textarea{height:80px;resize:vertical}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media(max-width:520px){.row2{grid-template-columns:1fr}}
+  .btn{font-size:14px;padding:9px 20px;cursor:pointer;border-radius:8px;font-weight:500;transition:all 0.15s}
+  .btn-primary{background:#1a1a1a;color:#fff;border:none}
+  .btn-primary:hover{background:#333}
+  .btn-sm{font-size:12px;padding:5px 12px;border:1px solid #e5e5e0;background:#fff;color:#888;border-radius:6px;cursor:pointer}
+  .search-row{display:flex;gap:8px;margin-bottom:1rem}
+  .search-row input{flex:1;font-size:14px;padding:8px 12px;border:1px solid #e5e5e0;border-radius:8px;background:#fff;outline:none}
+  .search-row input:focus{border-color:#1a1a1a}
+  .filter-row{display:flex;gap:6px;margin-bottom:1rem;flex-wrap:wrap}
+  .filter-btn{font-size:12px;padding:5px 12px;border-radius:100px;cursor:pointer;border:1px solid #e5e5e0;background:#fff;color:#888}
+  .filter-btn.active{background:#1a1a1a;color:#fff;border-color:transparent}
+  .alumno-row{background:#fff;border:1px solid #e5e5e0;border-radius:10px;padding:12px 16px;margin-bottom:8px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:border-color 0.15s}
+  .alumno-row:hover{border-color:#aaa}
+  .avatar{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;flex-shrink:0}
+  .av-ok{background:#dcfce7;color:#166534}
+  .av-warn{background:#fef3c7;color:#92400e}
+  .av-danger{background:#fee2e2;color:#991b1b}
+  .alumno-info{flex:1;min-width:0}
+  .alumno-name{font-size:14px;font-weight:500}
+  .alumno-meta{font-size:12px;color:#888;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .badge{font-size:11px;padding:3px 10px;border-radius:100px;font-weight:500;white-space:nowrap}
+  .b-ok{background:#dcfce7;color:#166534}
+  .b-warn{background:#fef3c7;color:#92400e}
+  .b-danger{background:#fee2e2;color:#991b1b}
+  .count-box{text-align:center;flex-shrink:0}
+  .count-num{font-size:18px;font-weight:600}
+  .count-lbl{font-size:10px;color:#888}
+  .detalle{display:none;background:#f9f9f7;border:1px solid #e5e5e0;border-radius:10px;padding:1.25rem;margin-bottom:1rem}
+  .event-item{font-size:13px;padding:8px 0;border-bottom:1px solid #e5e5e0;color:#555}
+  .event-item:last-child{border-bottom:none}
+  .event-tipo{display:inline-block;font-size:11px;padding:2px 8px;border-radius:100px;margin-right:6px;font-weight:500}
+  .et-baja{background:#fee2e2;color:#991b1b}
+  .et-multi{background:#fef3c7;color:#92400e}
+  .et-nota{background:#dbeafe;color:#1e40af}
+  .alerta-banner{background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:10px 14px;font-size:13px;color:#92400e;margin-bottom:1rem;display:none}
+  .stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:1.5rem}
+  .stat-card{background:#fff;border:1px solid #e5e5e0;border-radius:10px;padding:1rem;text-align:center}
+  .stat-num{font-size:24px;font-weight:600}
+  .stat-lbl{font-size:12px;color:#888;margin-top:2px}
+  .empty{text-align:center;padding:3rem;color:#aaa;font-size:14px}
+  .saving{font-size:12px;color:#22c55e;margin-left:10px;opacity:0;transition:opacity 0.3s}
+  .saving.show{opacity:1}
+  .match-item{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #f0f0ee;cursor:pointer}
+  .match-item:hover{background:#f9f9f7}
+  .match-item:last-child{border-bottom:none}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+  <h1>Registro de Alumnos</h1>
+  <div style="margin-left:auto;display:flex;align-items:center;gap:6px">
+    <div class="dot" id="connDot"></div>
+    <span class="conn-lbl" id="connLbl">Conectando...</span>
+  </div>
+</div>
+
+<div class="main">
+  <div class="tabs">
+    <button class="tab active" onclick="showTab('lista')">👥 Alumnos</button>
+    <button class="tab" onclick="showTab('registrar')">＋ Registrar evento</button>
+    <button class="tab" onclick="showTab('stats')">📊 Resumen</button>
+  </div>
+
+  <div id="tab-lista">
+    <div class="search-row">
+      <input type="text" id="searchInput" placeholder="Buscar por nombre o email..." oninput="renderLista()">
+    </div>
+    <div class="filter-row">
+      <button class="filter-btn active" onclick="setFiltro('todos',this)">Todos</button>
+      <button class="filter-btn" onclick="setFiltro('riesgo',this)">⚠ Con alerta</button>
+      <button class="filter-btn" onclick="setFiltro('baja',this)">Bajas</button>
+      <button class="filter-btn" onclick="setFiltro('multi',this)">Inscripciones múltiples</button>
+    </div>
+    <div id="lista-alumnos"><div class="empty">Cargando...</div></div>
+    <div class="detalle" id="detalle-alumno"></div>
+  </div>
+
+  <div id="tab-registrar" style="display:none">
+    <div class="card">
+      <div class="alerta-banner" id="alertaBanner"></div>
+      <div class="row2">
+        <div class="field">
+          <label>Nombre y apellido *</label>
+          <input type="text" id="f-nombre" placeholder="ej. María González" oninput="buscarAlumno()">
+        </div>
+        <div class="field">
+          <label>Email</label>
+          <input type="text" id="f-email" placeholder="ej. maria@email.com">
+        </div>
+      </div>
+      <div id="match-sugerencias" style="margin-top:-8px;margin-bottom:1rem;display:none">
+        <p style="font-size:12px;color:#888;margin-bottom:4px">¿Es alguno de estos?</p>
+        <div id="match-lista"></div>
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label>Tipo de evento *</label>
+          <select id="f-tipo">
+            <option value="">— Seleccioná —</option>
+            <option value="baja">Abandono / baja</option>
+            <option value="multi">Inscripción múltiple</option>
+            <option value="nota">Nota informativa</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Curso / comisión</label>
+          <input type="text" id="f-curso" placeholder="ej. HTML Básico — Turno tarde">
+        </div>
+      </div>
+      <div class="field">
+        <label>Observación</label>
+        <textarea id="f-obs" placeholder="Ej: abandonó sin aviso en semana 3..."></textarea>
+      </div>
+      <div class="field">
+        <label>Docente que registra</label>
+        <input type="text" id="f-docente" placeholder="Tu nombre">
+      </div>
+      <div style="display:flex;align-items:center">
+        <button class="btn btn-primary" onclick="guardarEvento()">Guardar evento</button>
+        <span class="saving" id="savingMsg">✓ Guardado</span>
+      </div>
+    </div>
+  </div>
+
+  <div id="tab-stats" style="display:none">
+    <div class="stats-grid" id="statsGrid"></div>
+    <div id="topRiesgo"></div>
+  </div>
+</div>
+
+<script>
+const SUPA_URL = 'https://vevjjewyosujjpcwmkxx.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZldmpqZXd5b3N1ampwY3dta3h4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODExOTUwODUsImV4cCI6MjA5Njc3MTA4NX0.UcpJ6zTwJ8q-kYeFFXFejSgO2FyybfYxIkGrrKD2txI';
+
+const headers = {
+  'Content-Type': 'application/json',
+  'apikey': SUPA_KEY,
+  'Authorization': 'Bearer ' + SUPA_KEY
+};
+
+let alumnos = {};
+let filtroActivo = 'todos';
+let detalleAbierto = null;
+
+async function cargar() {
+  try {
+    const res = await fetch(SUPA_URL + '/rest/v1/alumnos?select=*', { headers });
+    if (!res.ok) throw new Error(await res.text());
+    const rows = await res.json();
+    alumnos = {};
+    rows.forEach(r => { alumnos[r.id] = { id: r.id, nombre: r.nombre, email: r.email, eventos: r.eventos || [] }; });
+    setConectado(true);
+  } catch(e) {
+    console.error(e);
+    setConectado(false);
+  }
+  renderLista();
+  renderStats();
+}
+
+async function upsertAlumno(a) {
+  const res = await fetch(SUPA_URL + '/rest/v1/alumnos', {
+    method: 'POST',
+    headers: { ...headers, 'Prefer': 'resolution=merge-duplicates' },
+    body: JSON.stringify({ id: a.id, nombre: a.nombre, email: a.email || '', eventos: a.eventos })
+  });
+  if (!res.ok) throw new Error(await res.text());
+}
+
+function setConectado(ok) {
+  document.getElementById('connDot').className = 'dot' + (ok ? ' on' : '');
+  document.getElementById('connLbl').textContent = ok ? 'Conectado' : 'Error de conexión';
+}
+
+function getNivel(eventos) {
+  const bajas = eventos.filter(e => e.tipo === 'baja').length;
+  const multi = eventos.filter(e => e.tipo === 'multi').length;
+  if (bajas >= 2 || multi >= 2 || (bajas + multi) >= 3) return 'danger';
+  if (bajas === 1 || multi === 1) return 'warn';
+  return 'ok';
+}
+
+function getInitials(n) { return n.split(' ').map(p => p[0]).join('').toUpperCase().slice(0, 2); }
+
+function setFiltro(f, btn) {
+  filtroActivo = f;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderLista();
+}
+
+function renderLista() {
+  const q = (document.getElementById('searchInput') || {}).value || '';
+  const lista = document.getElementById('lista-alumnos');
+  let items = Object.values(alumnos);
+  if (q) items = items.filter(a => a.nombre.toLowerCase().includes(q.toLowerCase()) || (a.email || '').toLowerCase().includes(q.toLowerCase()));
+  if (filtroActivo === 'riesgo') items = items.filter(a => getNivel(a.eventos) !== 'ok');
+  if (filtroActivo === 'baja') items = items.filter(a => a.eventos.some(e => e.tipo === 'baja'));
+  if (filtroActivo === 'multi') items = items.filter(a => a.eventos.some(e => e.tipo === 'multi'));
+  items.sort((a, b) => { const o = { danger: 0, warn: 1, ok: 2 }; return o[getNivel(a.eventos)] - o[getNivel(b.eventos)]; });
+  if (!items.length) { lista.innerHTML = '<div class="empty">Sin registros todavía</div>'; return; }
+  lista.innerHTML = items.map(a => {
+    const nv = getNivel(a.eventos);
+    const avCls = nv === 'danger' ? 'av-danger' : nv === 'warn' ? 'av-warn' : 'av-ok';
+    const bCls = nv === 'danger' ? 'b-danger' : nv === 'warn' ? 'b-warn' : 'b-ok';
+    const bTxt = nv === 'danger' ? '⚠ No dar cupo' : nv === 'warn' ? 'Revisar' : 'Sin alertas';
+    const bajas = a.eventos.filter(e => e.tipo === 'baja').length;
+    const multi = a.eventos.filter(e => e.tipo === 'multi').length;
+    const ult = a.eventos.slice(-1)[0];
+    const meta = ult ? `Último evento: ${ult.fecha || 'sin fecha'}` : 'Sin eventos';
+    return `<div class="alumno-row" onclick="toggleDetalle('${a.id}')">
+      <div class="avatar ${avCls}">${getInitials(a.nombre)}</div>
+      <div class="alumno-info">
+        <div class="alumno-name">${a.nombre}</div>
+        <div class="alumno-meta">${a.email || 'sin email'} · ${meta}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0">
+        <span class="badge ${bCls}">${bTxt}</span>
+        <div style="display:flex;gap:10px">
+          ${bajas ? `<div class="count-box"><div class="count-num" style="color:#991b1b">${bajas}</div><div class="count-lbl">baja${bajas > 1 ? 's' : ''}</div></div>` : ''}
+          ${multi ? `<div class="count-box"><div class="count-num" style="color:#92400e">${multi}</div><div class="count-lbl">múltiple${multi > 1 ? 's' : ''}</div></div>` : ''}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleDetalle(id) {
+  const det = document.getElementById('detalle-alumno');
+  if (detalleAbierto === id) { det.style.display = 'none'; detalleAbierto = null; return; }
+  detalleAbierto = id;
+  const a = alumnos[id];
+  if (!a) { det.style.display = 'none'; return; }
+  const evHTML = a.eventos.length ? a.eventos.slice().reverse().map(e => {
+    const tCls = e.tipo === 'baja' ? 'et-baja' : e.tipo === 'multi' ? 'et-multi' : 'et-nota';
+    const tTxt = e.tipo === 'baja' ? 'Baja' : e.tipo === 'multi' ? 'Inscripción múltiple' : 'Nota';
+    return `<div class="event-item"><span class="event-tipo ${tCls}">${tTxt}</span><strong>${e.curso || 'sin curso'}</strong> · ${e.fecha || ''}<br>${e.obs || ''} <span style="color:#aaa">— ${e.docente || ''}</span></div>`;
+  }).join('') : '<div class="event-item">Sin eventos</div>';
+  det.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><p style="font-size:15px;font-weight:500">${a.nombre}</p><button class="btn-sm" onclick="toggleDetalle('${id}')">Cerrar</button></div>${evHTML}`;
+  det.style.display = 'block';
+  det.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function buscarAlumno() {
+  const q = (document.getElementById('f-nombre').value || '').toLowerCase().trim();
+  const banner = document.getElementById('alertaBanner');
+  const sugs = document.getElementById('match-sugerencias');
+  banner.style.display = 'none'; sugs.style.display = 'none';
+  if (q.length < 3) return;
+  const matches = Object.values(alumnos).filter(a => a.nombre.toLowerCase().includes(q));
+  if (matches.length) {
+    document.getElementById('match-lista').innerHTML = matches.map(a => {
+      const nv = getNivel(a.eventos);
+      const bCls = nv === 'danger' ? 'b-danger' : nv === 'warn' ? 'b-warn' : 'b-ok';
+      const bTxt = nv === 'danger' ? '⚠ No dar cupo' : nv === 'warn' ? 'Revisar' : 'OK';
+      return `<div class="match-item" onclick="seleccionarAlumno('${a.id}')">
+        <span style="font-size:13px;flex:1">${a.nombre} <span style="color:#aaa">${a.email || ''}</span></span>
+        <span class="badge ${bCls}">${bTxt}</span>
+        <span style="font-size:12px;color:#aaa">${a.eventos.length} evento${a.eventos.length !== 1 ? 's' : ''}</span>
+      </div>`;
+    }).join('');
+    sugs.style.display = 'block';
+    const peligrosos = matches.filter(a => getNivel(a.eventos) === 'danger');
+    if (peligrosos.length) {
+      banner.textContent = `⚠ Atención: "${peligrosos[0].nombre}" tiene ${peligrosos[0].eventos.length} eventos registrados. Revisá el historial antes de dar cupo.`;
+      banner.style.display = 'block';
+    }
+  }
+}
+
+function seleccionarAlumno(id) {
+  const a = alumnos[id];
+  document.getElementById('f-nombre').value = a.nombre;
+  document.getElementById('f-email').value = a.email || '';
+  document.getElementById('match-sugerencias').style.display = 'none';
+  const nv = getNivel(a.eventos);
+  if (nv === 'danger') {
+    const banner = document.getElementById('alertaBanner');
+    banner.textContent = `⚠ ${a.nombre} tiene ${a.eventos.filter(e => e.tipo === 'baja').length} baja(s) y ${a.eventos.filter(e => e.tipo === 'multi').length} inscripción múltiple. Considerá no dar cupo.`;
+    banner.style.display = 'block';
+  }
+}
+
+async function guardarEvento() {
+  const nombre = (document.getElementById('f-nombre').value || '').trim();
+  const tipo = document.getElementById('f-tipo').value;
+  if (!nombre) { alert('Ingresá el nombre del alumno'); return; }
+  if (!tipo) { alert('Seleccioná el tipo de evento'); return; }
+  const email = (document.getElementById('f-email').value || '').trim();
+  const curso = (document.getElementById('f-curso').value || '').trim();
+  const obs = (document.getElementById('f-obs').value || '').trim();
+  const docente = (document.getElementById('f-docente').value || '').trim();
+  const hoy = new Date().toISOString().split('T')[0];
+  let alumnoId = Object.keys(alumnos).find(id => alumnos[id].nombre.toLowerCase() === nombre.toLowerCase());
+  if (!alumnoId) {
+    alumnoId = 'a' + Date.now();
+    alumnos[alumnoId] = { id: alumnoId, nombre, email, eventos: [] };
+  } else {
+    if (email) alumnos[alumnoId].email = email;
+  }
+  alumnos[alumnoId].eventos.push({ tipo, curso, obs, docente, fecha: hoy });
+  try {
+    await upsertAlumno(alumnos[alumnoId]);
+    const msg = document.getElementById('savingMsg');
+    msg.classList.add('show');
+    setTimeout(() => msg.classList.remove('show'), 2000);
+    ['f-nombre', 'f-email', 'f-curso', 'f-obs', 'f-docente'].forEach(id => { document.getElementById(id).value = ''; });
+    document.getElementById('f-tipo').value = '';
+    document.getElementById('alertaBanner').style.display = 'none';
+    document.getElementById('match-sugerencias').style.display = 'none';
+    showTab('lista');
+    renderLista();
+    renderStats();
+  } catch(e) {
+    alert('Error al guardar: ' + e.message);
+  }
+}
+
+function renderStats() {
+  const items = Object.values(alumnos);
+  const total = items.length;
+  const enRiesgo = items.filter(a => getNivel(a.eventos) !== 'ok').length;
+  const noDarCupo = items.filter(a => getNivel(a.eventos) === 'danger').length;
+  const sg = document.getElementById('statsGrid');
+  if (sg) sg.innerHTML = `
+    <div class="stat-card"><div class="stat-num">${total}</div><div class="stat-lbl">Registrados</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:#92400e">${enRiesgo}</div><div class="stat-lbl">Con observaciones</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:#991b1b">${noDarCupo}</div><div class="stat-lbl">No dar cupo</div></div>`;
+  const top = items.filter(a => getNivel(a.eventos) === 'danger').sort((a, b) => b.eventos.length - a.eventos.length).slice(0, 5);
+  const tr = document.getElementById('topRiesgo');
+  if (tr) tr.innerHTML = top.length ? '<p style="font-size:13px;color:#888;margin-bottom:8px">Alumnos con más eventos</p>' +
+    top.map(a => `<div class="alumno-row" style="cursor:default">
+      <div class="avatar av-danger">${getInitials(a.nombre)}</div>
+      <div class="alumno-info"><div class="alumno-name">${a.nombre}</div><div class="alumno-meta">${a.email || 'sin email'}</div></div>
+      <div class="count-box"><div class="count-num" style="color:#991b1b">${a.eventos.length}</div><div class="count-lbl">eventos</div></div>
+    </div>`).join('') : '<div class="empty">Ningún alumno en zona de alerta 🎉</div>';
+}
+
+function showTab(t) {
+  ['lista', 'registrar', 'stats'].forEach(id => {
+    document.getElementById('tab-' + id).style.display = id === t ? 'block' : 'none';
+  });
+  document.querySelectorAll('.tab').forEach((btn, i) => {
+    btn.classList.toggle('active', ['lista', 'registrar', 'stats'][i] === t);
+  });
+  if (t === 'stats') renderStats();
+}
+
+cargar();
+</script>
+</body>
+</html>
