@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -256,16 +257,85 @@ function toggleDetalle(id) {
   const det = document.getElementById('detalle-alumno');
   if (detalleAbierto === id) { det.style.display = 'none'; detalleAbierto = null; return; }
   detalleAbierto = id;
-  const a = alumnos[id];
-  if (!a) { det.style.display = 'none'; return; }
-  const evHTML = a.eventos.length ? a.eventos.slice().reverse().map(e => {
-    const tCls = e.tipo === 'baja' ? 'et-baja' : e.tipo === 'multi' ? 'et-multi' : 'et-nota';
-    const tTxt = e.tipo === 'baja' ? 'Baja' : e.tipo === 'multi' ? 'Inscripción múltiple' : 'Nota';
-    return `<div class="event-item"><span class="event-tipo ${tCls}">${tTxt}</span><strong>${e.curso || 'sin curso'}</strong> · ${e.fecha || ''}<br>${e.obs || ''} <span style="color:#aaa">— ${e.docente || ''}</span></div>`;
-  }).join('') : '<div class="event-item">Sin eventos</div>';
-  det.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><p style="font-size:15px;font-weight:500">${a.nombre}</p><button class="btn-sm" onclick="toggleDetalle('${id}')">Cerrar</button></div>${evHTML}`;
+  renderDetalle(id);
   det.style.display = 'block';
   det.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function renderDetalle(id) {
+  const det = document.getElementById('detalle-alumno');
+  const a = alumnos[id];
+  if (!a) { det.style.display = 'none'; return; }
+  const evHTML = a.eventos.length ? a.eventos.slice().reverse().map((e, i) => {
+    const realIdx = a.eventos.length - 1 - i;
+    const tCls = e.tipo === 'baja' ? 'et-baja' : e.tipo === 'multi' ? 'et-multi' : 'et-nota';
+    const tTxt = e.tipo === 'baja' ? 'Baja' : e.tipo === 'multi' ? 'Inscripción múltiple' : 'Nota';
+    return `<div class="event-item" style="display:flex;align-items:flex-start;gap:8px">
+      <div style="flex:1"><span class="event-tipo ${tCls}">${tTxt}</span><strong>${e.curso || 'sin curso'}</strong> · ${e.fecha || ''}<br>${e.obs || ''} <span style="color:#aaa">— ${e.docente || ''}</span></div>
+      <button class="btn-sm" style="flex-shrink:0;color:#ef4444;border-color:#fecaca" onclick="borrarEvento('${id}',${realIdx})">✕</button>
+    </div>`;
+  }).join('') : '<div class="event-item">Sin eventos</div>';
+  det.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <p style="font-size:15px;font-weight:500">${a.nombre}</p>
+      <div style="display:flex;gap:6px">
+        <button class="btn-sm" onclick="editarAlumno('${id}')">✏ Editar</button>
+        <button class="btn-sm" style="color:#ef4444;border-color:#fecaca" onclick="borrarAlumno('${id}')">🗑 Eliminar alumno</button>
+        <button class="btn-sm" onclick="toggleDetalle('${id}')">Cerrar</button>
+      </div>
+    </div>
+    <div id="form-editar-${id}" style="display:none;background:#f9f9f7;border-radius:8px;padding:12px;margin-bottom:12px">
+      <div class="row2" style="margin-bottom:8px">
+        <div class="field" style="margin-bottom:0"><label>Nombre</label><input type="text" id="edit-nombre-${id}" value="${a.nombre}"></div>
+        <div class="field" style="margin-bottom:0"><label>Email</label><input type="text" id="edit-email-${id}" value="${a.email||''}"></div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <button class="btn btn-primary" style="font-size:13px;padding:6px 14px" onclick="guardarEdicion('${id}')">Guardar</button>
+        <button class="btn-sm" onclick="document.getElementById('form-editar-${id}').style.display='none'">Cancelar</button>
+      </div>
+    </div>
+    ${evHTML}`;
+}
+
+function editarAlumno(id) {
+  const form = document.getElementById('form-editar-' + id);
+  form.style.display = form.style.display === 'none' ? 'block' : 'none';
+}
+
+async function guardarEdicion(id) {
+  const nombre = document.getElementById('edit-nombre-' + id).value.trim();
+  const email = document.getElementById('edit-email-' + id).value.trim();
+  if (!nombre) { alert('El nombre no puede estar vacío'); return; }
+  alumnos[id].nombre = nombre;
+  alumnos[id].email = email;
+  try {
+    await upsertAlumno(alumnos[id]);
+    renderDetalle(id);
+    renderLista();
+  } catch(e) { alert('Error al guardar: ' + e.message); }
+}
+
+async function borrarEvento(alumnoId, eventoIdx) {
+  if (!confirm('¿Borrar este evento?')) return;
+  alumnos[alumnoId].eventos.splice(eventoIdx, 1);
+  try {
+    await upsertAlumno(alumnos[alumnoId]);
+    renderDetalle(alumnoId);
+    renderLista();
+    renderStats();
+  } catch(e) { alert('Error: ' + e.message); }
+}
+
+async function borrarAlumno(id) {
+  if (!confirm('¿Eliminar a ' + alumnos[id].nombre + ' y todos sus eventos? Esta acción no se puede deshacer.')) return;
+  try {
+    await fetch(SUPA_URL + '/rest/v1/alumnos?id=eq.' + id, { method: 'DELETE', headers });
+    delete alumnos[id];
+    document.getElementById('detalle-alumno').style.display = 'none';
+    detalleAbierto = null;
+    renderLista();
+    renderStats();
+  } catch(e) { alert('Error: ' + e.message); }
 }
 
 function buscarAlumno() {
